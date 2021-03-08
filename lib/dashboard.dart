@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:kaffebotapp/Services/api_service.dart';
 import 'package:kaffebotapp/Utils/custom_colors.dart';
@@ -74,10 +75,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: <Widget>[
-        Text(
-          'You have pushed the button this many times:',
+        AutoSizeText(
+          'IRobot Admin Data',
           style: Theme.of(context).textTheme.headline3,
+          maxLines: 1,
         ),
+
       ],
     );
   }
@@ -168,13 +171,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           return const SizedBox();
         } else {
           widget.animationController.forward();
-          return StatisticView(
+          return StatusView(
             animation: numberAnimation,
             animationController: widget.animationController,
-            closedInViktor: "Lukkede aftaler fra fasit",
-            completedTasksNumber: 12,
-            closedInFasit: "Lukkede aftaler fra viktor",
-            remainingTasksNumber: 4,
           );
         }
       },
