@@ -119,10 +119,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 iconSize: 40,
                 onPressed: () async {
                   var b = await apiService.getLocalTemperature();
-                  if (_pageController.hasClients) {
-                    _pageController.animateToPage(0,
-                        duration: pageDuration(), curve: pageAnimationCurve());
-                  }
                 }),
             IconButton(
                 padding: EdgeInsets.only(top: 30, bottom: 30),

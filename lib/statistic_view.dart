@@ -31,85 +31,81 @@ class StatusView extends StatelessWidget {
             child: new Transform(
                 transform: new Matrix4.translationValues(
                     0.0, 30 * (1.0 - animation.value), 0.0),
-                child: Container(
-                  width: 500,
-                  decoration: BoxDecoration(
-                    color: CustomColors.discordDashboardGrey,
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(8.0),
-                        bottomLeft: Radius.circular(8.0),
-                        bottomRight: Radius.circular(8.0),
-                        topRight: Radius.circular(68.0)),
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                          color: CustomColors.discordDashboardGrey
-                              .withOpacity(0.2),
-                          offset: Offset(1.1, 1.1),
-                          blurRadius: 10.0),
-                    ],
-                  ),
-                  child: Column(
-                    children: <Widget>[
-                      Padding(
-                        padding:
-                            const EdgeInsets.only(top: 16, left: 16, right: 16),
-                        child: Padding(
-                            padding: const EdgeInsets.only(right: 16),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: AutoSizeText(
-                                    "Battery Level ",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 16,
-                                        letterSpacing: -0.2,
-                                        color: CustomColors.discordBlue),
-                                  ),
-                                  flex: 2,
-                                ),
-                                Center(child: completedInViktorCircle(50.0)),
-                              ],
-                            )),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 24, right: 24, top: 8, bottom: 8),
-                        child: Container(
-                          height: 2,
-                          decoration: BoxDecoration(
-                            color: CustomColors.discordDashboardGrey
-                                .withOpacity(0.2),
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(4.0)),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 24, right: 24, top: 8, bottom: 16),
-                        child: Row(
-                          children: <Widget>[
-                            bottomStatisticOverview(
-                                HexColor('#F1B440').withOpacity(0.9),
-                                true,
-                                StatisticConstants.darkYellowgradient,
-                                StatisticConstants.lightYellowbar,
-                                CrossAxisAlignment.start),
-                            bottomStatisticOverview(
-                                CustomColors.discordBlue,
-                                false,
-                                StatisticConstants.darkBlueGradient,
-                                StatisticConstants.lightBlueBar,
-                                CrossAxisAlignment.end),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                )),
+                child: batteryStatusContainer()),
           );
         });
+  }
+
+  Widget batteryStatusContainer(){
+    return Container(
+      width: 500,
+      height: 500,
+      decoration: BoxDecoration(
+        color: CustomColors.discordDashboardGrey,
+        borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(8.0),
+            bottomLeft: Radius.circular(8.0),
+            bottomRight: Radius.circular(8.0),
+            topRight: Radius.circular(68.0)),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+              color: CustomColors.discordDashboardGrey
+                  .withOpacity(0.2),
+              offset: Offset(1.1, 1.1),
+              blurRadius: 10.0),
+        ],
+      ),
+      child: Column(
+        children: <Widget>[
+          batteryPercentage(),
+          voltageAndCurrent()
+        ],
+      ),
+    );
+  }
+
+  Widget batteryPercentage(){
+    return Padding(
+          padding: const EdgeInsets.only(right: 16, left: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: AutoSizeText(
+                  "Battery Level ",
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 22,
+                      letterSpacing: -0.2,
+                      color: CustomColors.discordBlue),
+                ),
+                flex: 2,
+              ),
+              Center(child: completedInViktorCircle(50.0)),
+            ],
+    ));
+  }
+
+  Widget voltageAndCurrent(){
+    return Padding(
+      padding: const EdgeInsets.only(
+          left: 24, right: 24, top: 8, bottom: 16),
+      child: Row(
+        children: <Widget>[
+          bottomStatisticOverview(
+              HexColor('#F1B440').withOpacity(0.9),
+              true,
+              StatisticConstants.darkYellowgradient,
+              StatisticConstants.lightYellowbar,
+              CrossAxisAlignment.start),
+          bottomStatisticOverview(
+              CustomColors.discordBlue,
+              false,
+              StatisticConstants.darkBlueGradient,
+              StatisticConstants.lightBlueBar,
+              CrossAxisAlignment.end),
+        ],
+      ),
+    );
   }
 
   Widget leftStatisticContainer(
