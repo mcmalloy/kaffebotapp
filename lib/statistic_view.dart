@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
+import 'package:kaffebotapp/Model/battery_status.dart';
 import 'dart:math' as math;
 
 import 'package:kaffebotapp/Utils/custom_colors.dart';
@@ -9,11 +10,9 @@ import 'package:auto_size_text/auto_size_text.dart';
 class StatusView extends StatelessWidget {
   final AnimationController animationController;
   final Animation animation;
-
+  final BatteryStatus batteryStatus;
   const StatusView(
-      {Key key,
-      this.animationController,
-      this.animation})
+      {Key key, this.animationController, this.animation, this.batteryStatus})
       : super(key: key);
 
   @override
@@ -36,7 +35,7 @@ class StatusView extends StatelessWidget {
         });
   }
 
-  Widget batteryStatusContainer(){
+  Widget batteryStatusContainer() {
     return Container(
       width: 500,
       height: 500,
@@ -49,57 +48,54 @@ class StatusView extends StatelessWidget {
             topRight: Radius.circular(68.0)),
         boxShadow: <BoxShadow>[
           BoxShadow(
-              color: CustomColors.discordDashboardGrey
-                  .withOpacity(0.2),
+              color: CustomColors.discordDashboardGrey.withOpacity(0.2),
               offset: Offset(1.1, 1.1),
               blurRadius: 10.0),
         ],
       ),
       child: Column(
-        children: <Widget>[
-          batteryPercentage(),
-          voltageAndCurrent()
-        ],
+        children: <Widget>[batteryPercentage(), voltageAndCurrent()],
       ),
     );
   }
 
-  Widget batteryPercentage(){
+  Widget batteryPercentage() {
     return Padding(
-          padding: const EdgeInsets.only(right: 16, left: 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: AutoSizeText(
-                  "Battery Level ",
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 22,
-                      letterSpacing: -0.2,
-                      color: CustomColors.discordBlue),
-                ),
-                flex: 2,
+        padding: const EdgeInsets.only(right: 16, left: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: AutoSizeText(
+                "Battery Level ",
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 22,
+                    letterSpacing: -0.2,
+                    color: CustomColors.discordBlue),
               ),
-              Center(child: completedInViktorCircle(50.0)),
-            ],
-    ));
+              flex: 2,
+            ),
+            Center(child: batteryPercentCircle()),
+          ],
+        ));
   }
 
-  Widget voltageAndCurrent(){
+  Widget voltageAndCurrent() {
     return Padding(
-      padding: const EdgeInsets.only(
-          left: 24, right: 24, top: 8, bottom: 16),
+      padding: const EdgeInsets.only(left: 24, right: 24, top: 8, bottom: 16),
       child: Row(
         children: <Widget>[
           bottomStatisticOverview(
               HexColor('#F1B440').withOpacity(0.9),
-              true,
+              "Battery Voltage",
+              batteryStatus.batteryVoltage,
               StatisticConstants.darkYellowgradient,
               StatisticConstants.lightYellowbar,
               CrossAxisAlignment.start),
           bottomStatisticOverview(
               CustomColors.discordBlue,
-              false,
+              "Battery Current",
+              batteryStatus.batteryCurrent,
               StatisticConstants.darkBlueGradient,
               StatisticConstants.lightBlueBar,
               CrossAxisAlignment.end),
@@ -167,7 +163,7 @@ class StatusView extends StatelessWidget {
     );
   }
 
-  Widget completedInViktorCircle(double batteryLevelPercent) {
+  Widget batteryPercentCircle() {
     return Stack(
       children: <Widget>[
         Padding(
@@ -188,7 +184,8 @@ class StatusView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 AutoSizeText(
-                  '${(batteryLevelPercent * animationController.value).toInt()}%',
+                  //'${(batteryPercent * animationController.value).toInt()}%',
+                  '${(batteryStatus.batteryPercentage * animationController.value).toInt()}%',
                   style: TextStyle(
                     fontWeight: FontWeight.normal,
                     fontSize: 26,
@@ -205,11 +202,13 @@ class StatusView extends StatelessWidget {
           padding: const EdgeInsets.all(4.0),
           child: CustomPaint(
             painter: CurvePainter(
-                colors: [
-                  HexColor("#8A98E8"),
-                  CustomColors.discordBlue,
-                ],
-                angle: ((animationController.value*batteryLevelPercent)/100)*360,),
+              colors: [
+                HexColor("#8A98E8"),
+                CustomColors.discordBlue,
+              ],
+              angle: ((animationController.value * batteryStatus.batteryPercentage) / 100) *
+                  360,
+            ),
             child: SizedBox(
               width: 108,
               height: 108,
@@ -222,7 +221,8 @@ class StatusView extends StatelessWidget {
 
   Widget bottomStatisticOverview(
       Color textColor,
-      bool isVoltage,
+      String type,
+      double powerValue,
       LinearGradient thickGradient,
       BoxDecoration horizontalBarGradient,
       CrossAxisAlignment calignment) {
@@ -232,7 +232,7 @@ class StatusView extends StatelessWidget {
         crossAxisAlignment: calignment,
         children: <Widget>[
           AutoSizeText(
-            isVoltage ? "Battery Voltage" : "Battery Current",
+             type,
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontWeight: FontWeight.w500,
@@ -249,7 +249,7 @@ class StatusView extends StatelessWidget {
               child: Row(
                 children: <Widget>[
                   Container(
-                    width: (50-animation.value),
+                    width: (50 - animation.value),
                     height: 12,
                     decoration: BoxDecoration(
                       gradient: thickGradient,
@@ -261,7 +261,7 @@ class StatusView extends StatelessWidget {
             ),
           ),
           AutoSizeText(
-            isVoltage ? "2.6V" : "1.9A",
+            type.contains("Voltage") ? "${batteryStatus.batteryVoltage}V" : "${batteryStatus.batteryCurrent}A",
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontWeight: FontWeight.w500,
