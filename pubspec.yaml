@@ -31,6 +31,7 @@ dependencies:
   hexcolor: 1.0.5
   auto_size_text: ^2.1.0
   web_socket_channel: 2.0.0
+  property_change_notifier: ^0.2.0
 
 dev_dependencies:
   flutter_test:

@@ -4,7 +4,7 @@ import 'package:kaffebotapp/Model/battery_status.dart';
 import 'dart:math' as math;
 
 import 'package:kaffebotapp/Utils/custom_colors.dart';
-import 'package:kaffebotapp/statistic_constants.dart';
+import 'file:///C:/Users/Mark/StudioProjects/kaffebotapp/lib/Utils/statistic_constants.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
 class StatusView extends StatelessWidget {

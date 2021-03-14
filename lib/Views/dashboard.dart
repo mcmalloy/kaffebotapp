@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:kaffebotapp/Model/battery_status.dart';
 import 'package:kaffebotapp/Services/api_service.dart';
 import 'package:kaffebotapp/Utils/custom_colors.dart';
-import 'package:kaffebotapp/statistic_view.dart';
+import 'file:///C:/Users/Mark/StudioProjects/kaffebotapp/lib/Views/statistic_view.dart';
+import 'package:kaffebotapp/Views/movement_view.dart';
 
 class MyHomePage extends StatefulWidget {
   final AnimationController animationController;
@@ -20,7 +21,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Animation numberAnimation;
   BatteryStatus batteryStatus;
   PageController _pageController = PageController(initialPage: 0);
-
+  RawKeyEvent _keyEvent;
+  final RobotMovement movement = RobotMovement();
   @override
   void initState() {
     // TODO: implement initState
@@ -34,7 +36,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Future<void> fetchBatteryData() async {
-    BatteryStatus response = await apiService.getBatteryPercent();
+    //BatteryStatus response = await apiService.getBatteryPercent();
+    BatteryStatus response = new BatteryStatus(76.4, 4.94, 1.21);
     setState(() {
       print("setting batteryPercent to: ${response.batteryPercentage}");
       batteryStatus = response;
@@ -44,39 +47,52 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).backgroundColor,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Theme.of(context).accentColor,
-        title: Text(
-          widget.title,
-          style: TextStyle(color: CustomColors.discordBlue),
-        ),
-      ),
-      body: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          AnimatedContainer(
-              height: double.infinity,
-              width: _showDashBoard ? 310 : 70,
-              color: CustomColors.discordDashboardGrey,
-              duration: Duration(milliseconds: 400),
-              child: dashBoardChildren()),
-          Expanded(
-            flex: 4,
-            child: connectPage(),
+        backgroundColor: Theme.of(context).backgroundColor,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Theme.of(context).accentColor,
+          title: Text(
+            widget.title,
+            style: TextStyle(color: CustomColors.discordBlue),
           ),
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding:
-                  EdgeInsets.only(left: 32, right: 32, bottom: 32, top: 32),
-              child: temperatureDashboardBody()
-            ),
-          )
-        ],
-      ),
-    );
+        ),
+        body: RawKeyboardListener(
+          focusNode: FocusNode(),
+          onKey: (RawKeyEvent event) {
+            setState(() {
+              _keyEvent = event;
+            });
+            //movement.keyboardInterpreter(event);
+          },
+          autofocus: true,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              AnimatedContainer(
+                  height: double.infinity,
+                  width: _showDashBoard ? 310 : 70,
+                  color: CustomColors.discordDashboardGrey,
+                  duration: Duration(milliseconds: 400),
+                  child: dashBoardChildren()),
+              Expanded(
+                flex: 4,
+                child: Column(
+                  children: [
+                    connectPage(),
+                    RobotMovement(event: _keyEvent,),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Padding(
+                    padding: EdgeInsets.only(
+                        left: 32, right: 32, bottom: 32, top: 32),
+                    child: temperatureDashboardBody()),
+              )
+            ],
+          ),
+        ));
   }
 
   Widget connectPage() {
@@ -185,7 +201,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Future<bool> getData() async {
-    if(batteryStatus!=null){
+    if (batteryStatus != null) {
       return true;
     } else {
       await fetchBatteryData();
