@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:kaffebotapp/Model/battery_status.dart';
 import 'package:kaffebotapp/Services/api_service.dart';
 import 'package:kaffebotapp/Utils/custom_colors.dart';
 import 'file:///C:/Users/Mark/StudioProjects/kaffebotapp/lib/Views/statistic_view.dart';
-import 'package:kaffebotapp/Views/movement_view.dart';
+import 'package:kaffebotapp/Views/movement_widgets.dart';
 
 class MyHomePage extends StatefulWidget {
   final AnimationController animationController;
@@ -20,19 +22,36 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   ApiService apiService = ApiService();
   Animation numberAnimation;
   BatteryStatus batteryStatus;
-  PageController _pageController = PageController(initialPage: 0);
-  RawKeyEvent _keyEvent;
-  final RobotMovement movement = RobotMovement();
+  bool _isForward = false;
+  bool _isTurningLeft = false;
+  bool _isTurningRight = false;
+  bool _isReversing = false;
+  MovementWidgets customWidgets = MovementWidgets();
+  StreamController<String> streamController = StreamController();
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    //streamController.stream.asBroadcastStream();
+    //streamController.stream.asBroadcastStream(onListen: (messages) => print(messages));
+    streamController.stream.listen((messages) => print(messages));
     setState(() {
       numberAnimation = Tween<double>(begin: 0, end: 0.5).animate(
           CurvedAnimation(
               parent: widget.animationController,
               curve: Interval(0, 0.5, curve: Curves.fastOutSlowIn)));
     });
+  }
+
+  void dispose() {
+    print("Closing stream");
+    streamController.close();
+    super.dispose();
+  }
+
+  void newMovementCommand(String message) {
+    final duration = Duration(seconds: 2);
+    Timer.periodic(duration, (Timer t) => streamController.add(message));
   }
 
   Future<void> fetchBatteryData() async {
@@ -56,67 +75,54 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             style: TextStyle(color: CustomColors.discordBlue),
           ),
         ),
-        body: RawKeyboardListener(
-          focusNode: FocusNode(),
-          onKey: (RawKeyEvent event) {
-            setState(() {
-              _keyEvent = event;
-            });
-            //movement.keyboardInterpreter(event);
-          },
-          autofocus: true,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              AnimatedContainer(
-                  height: double.infinity,
-                  width: _showDashBoard ? 310 : 70,
-                  color: CustomColors.discordDashboardGrey,
-                  duration: Duration(milliseconds: 400),
-                  child: dashBoardChildren()),
-              Expanded(
-                flex: 4,
-                child: Column(
-                  children: [
-                    connectPage(),
-                    RobotMovement(event: _keyEvent,),
+        body: dashboardBody());
+  }
+
+  Widget dashboardBody() {
+    return RawKeyboardListener(
+      focusNode: FocusNode(),
+      onKey: (RawKeyEvent event) {
+        setState(() {
+          keyboardInterpreter(event);
+        });
+      },
+      autofocus: true,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          AnimatedContainer(
+              height: double.infinity,
+              width: _showDashBoard ? 310 : 70,
+              color: CustomColors.discordDashboardGrey,
+              duration: Duration(milliseconds: 400),
+              child: dashBoardChildren()),
+          Expanded(
+            flex: 4,
+            child: Column(
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    AutoSizeText(
+                      'IRobot Admin Data',
+                      style: Theme.of(context).textTheme.headline3,
+                      maxLines: 1,
+                    ),
                   ],
                 ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Padding(
-                    padding: EdgeInsets.only(
-                        left: 32, right: 32, bottom: 32, top: 32),
-                    child: temperatureDashboardBody()),
-              )
-            ],
+                keyboardUI()
+              ],
+            ),
           ),
-        ));
-  }
-
-  Widget connectPage() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: <Widget>[
-        AutoSizeText(
-          'IRobot Admin Data',
-          style: Theme.of(context).textTheme.headline3,
-          maxLines: 1,
-        ),
-      ],
-    );
-  }
-
-  Widget controlPage() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          'Control page',
-          style: Theme.of(context).textTheme.headline3,
-        ),
-      ],
+          Expanded(
+            flex: 2,
+            child: Padding(
+                padding:
+                    EdgeInsets.only(left: 32, right: 32, bottom: 32, top: 32),
+                child: robotStatusWidget()),
+          )
+        ],
+      ),
     );
   }
 
@@ -150,12 +156,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   color: CustomColors.discordBlue,
                 ),
                 iconSize: 40,
-                onPressed: () {
-                  if (_pageController.hasClients) {
-                    _pageController.animateToPage(1,
-                        duration: pageDuration(), curve: pageAnimationCurve());
-                  }
-                })
+                onPressed: () {})
           ],
         ),
         CircleAvatar(
@@ -182,7 +183,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     return Curves.easeInOut;
   }
 
-  Widget temperatureDashboardBody() {
+  Widget robotStatusWidget() {
     return FutureBuilder<bool>(
       future: getData(),
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
@@ -207,5 +208,114 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       await fetchBatteryData();
       return true;
     }
+  }
+
+  Widget keyCap(bool isPressed, String keyCapLetter) {
+    return Container(
+      height: 50,
+      width: 50,
+      decoration: BoxDecoration(
+          color: isPressed
+              ? CustomColors.discordBlue.withOpacity(0.7)
+              : CustomColors.discordDark,
+          borderRadius: BorderRadius.circular(12)),
+      child: Text(
+        keyCapLetter,
+        textAlign: TextAlign.center,
+        style: isPressed
+            ? customWidgets.highlightMovement()
+            : customWidgets.defaultHighlight(),
+      ),
+    );
+  }
+
+  Widget keyboardUI() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Padding(
+          padding: keyCapPadding(),
+          child: keyCap(_isForward, "W"),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: keyCapPadding(),
+              child: keyCap(_isTurningLeft, "A"),
+            ),
+            Padding(padding: keyCapPadding(), child: keyCap(_isReversing, "S")),
+            Padding(
+                padding: keyCapPadding(), child: keyCap(_isTurningRight, "D")),
+          ],
+        )
+      ],
+    );
+  }
+
+  EdgeInsets keyCapPadding() {
+    return EdgeInsets.symmetric(horizontal: 6, vertical: 4);
+  }
+
+  void keyboardInterpreter(RawKeyEvent event) {
+    if (event.runtimeType.toString() == 'RawKeyDownEvent') {
+      streamController.sink.done;
+      resetMovementBool();
+      if (event.logicalKey.keyLabel.toUpperCase() == "W") {
+        setState(() {
+          _isForward = true;
+        });
+        streamController.sink.add("Moving Forward");
+      } else if (event.logicalKey.keyLabel.toUpperCase() == "A") {
+        setState(() {
+          _isTurningLeft = true;
+        });
+        streamController.sink.add("Turning Left");
+      } else if (event.logicalKey.keyLabel.toUpperCase() == "S") {
+        setState(() {
+          _isReversing = true;
+        });
+        streamController.sink.add("Reversing");
+
+      } else if (event.logicalKey.keyLabel.toUpperCase() == "D") {
+        setState(() {
+          _isTurningRight = true;
+        });
+        streamController.sink.add("Turning Right");
+      }
+    } else if (event.runtimeType.toString() == 'RawKeyUpEvent') {
+      streamController.sink.done;
+      if (event.logicalKey.keyLabel.toUpperCase() == "W") {
+        setState(() {
+          _isForward = false;
+        });
+        print("Braking forward");
+       } else if (event.logicalKey.keyLabel.toUpperCase() == "A") {
+        setState(() {
+          _isTurningLeft = false;
+        });
+        print("Braking left");
+      } else if (event.logicalKey.keyLabel.toUpperCase() == "S") {
+        setState(() {
+          _isReversing = false;
+        });
+        print("Stop Reversing");
+      } else if (event.logicalKey.keyLabel.toUpperCase() == "D") {
+        setState(() {
+          _isTurningRight = false;
+        });
+        print("Braking Right");
+      }
+    }
+  }
+
+  void resetMovementBool() {
+    setState(() {
+      _isForward = false;
+      _isTurningRight = false;
+      _isTurningLeft = false;
+      _isReversing = false;
+    });
   }
 }
