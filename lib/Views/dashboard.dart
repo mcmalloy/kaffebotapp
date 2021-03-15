@@ -7,6 +7,7 @@ import 'package:kaffebotapp/Services/api_service.dart';
 import 'package:kaffebotapp/Utils/custom_colors.dart';
 import 'file:///C:/Users/Mark/StudioProjects/kaffebotapp/lib/Views/statistic_view.dart';
 import 'package:kaffebotapp/Views/movement_widgets.dart';
+import 'package:web_socket_channel/io.dart';
 
 class MyHomePage extends StatefulWidget {
   final AnimationController animationController;
@@ -28,6 +29,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   bool _isReversing = false;
   MovementWidgets customWidgets = MovementWidgets();
   StreamController<String> streamController = StreamController();
+  IOWebSocketChannel channel = IOWebSocketChannel.connect("ws://127.0.0.1:8765");
   @override
   void initState() {
     // TODO: implement initState
@@ -44,10 +46,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Future<void> initStream() async {
-    await apiService.connectToSocket();
+    //await apiService.socketIO();
+    String command = "";
     streamController.stream.listen((data) {
       print("Message: "+data);
+      command = data;
+      channel.sink.add(data); // Streams the WASD movement data to the python websocket
     });
+    channel.stream.listen((event) { // Python requires to send a confirmation, we ignore it
+      channel.sink.add(command);
+    });
+
   }
 
   void dispose() {
@@ -257,12 +266,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   void keyboardInterpreter(RawKeyEvent event) {
     if (event.runtimeType.toString() == 'RawKeyDownEvent') {
       streamController.sink.done;
+      channel.sink.done;
       resetMovementBool();
       if (event.logicalKey.keyLabel.toUpperCase() == "W") {
         setState(() {
           _isForward = true;
         });
         streamController.sink.add("Moving Forward");
+        channel.sink.add("Moving Forward");
       } else if (event.logicalKey.keyLabel.toUpperCase() == "A") {
         setState(() {
           _isTurningLeft = true;

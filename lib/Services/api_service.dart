@@ -54,7 +54,7 @@ class ApiService{
   Future<void> socketIO() async {
     print("initializing connection to socket");
     // Dart client
-    IO.Socket socket = IO.io('http://127.0.0.1:5000');
+    IO.Socket socket = IO.io('http://127.0.0.1:8765');
     socket.onConnect((_) {
       print('connect');
       socket.emit('msg', 'test');
@@ -65,7 +65,7 @@ class ApiService{
   }
 
   Future<void> connectToSocket() async {
-    Socket socket = io('http://127.0.0.1:5000',
+    Socket socket = io('http://127.0.0.1:8765',
         OptionBuilder()
             .setTransports(['websocket']) // for Flutter or Dart VM
             .disableAutoConnect()  // disable auto-connection
