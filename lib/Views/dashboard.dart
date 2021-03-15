@@ -34,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     super.initState();
     //streamController.stream.asBroadcastStream();
     //streamController.stream.asBroadcastStream(onListen: (messages) => print(messages));
-    streamController.stream.listen((messages) => print(messages));
+    initStream();
     setState(() {
       numberAnimation = Tween<double>(begin: 0, end: 0.5).animate(
           CurvedAnimation(
@@ -43,15 +43,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
   }
 
+  Future<void> initStream() async {
+    await apiService.connectToSocket();
+    streamController.stream.listen((data) {
+      print("Message: "+data);
+    });
+  }
+
   void dispose() {
     print("Closing stream");
     streamController.close();
     super.dispose();
-  }
-
-  void newMovementCommand(String message) {
-    final duration = Duration(seconds: 2);
-    Timer.periodic(duration, (Timer t) => streamController.add(message));
   }
 
   Future<void> fetchBatteryData() async {
@@ -99,17 +101,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           Expanded(
             flex: 4,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    AutoSizeText(
-                      'IRobot Admin Data',
-                      style: Theme.of(context).textTheme.headline3,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
                 keyboardUI()
               ],
             ),
@@ -219,12 +212,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               ? CustomColors.discordBlue.withOpacity(0.7)
               : CustomColors.discordDark,
           borderRadius: BorderRadius.circular(12)),
-      child: Text(
-        keyCapLetter,
-        textAlign: TextAlign.center,
-        style: isPressed
-            ? customWidgets.highlightMovement()
-            : customWidgets.defaultHighlight(),
+      child: Padding(
+        padding: EdgeInsets.only(top: 14),
+        child: Text(
+          keyCapLetter,
+          textAlign: TextAlign.center,
+          style: isPressed
+              ? customWidgets.highlightMovement()
+              : customWidgets.defaultHighlight(),
+        ),
       ),
     );
   }
