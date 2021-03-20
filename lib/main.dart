@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:kaffebotapp/Utils/custom_colors.dart';
-import 'file:///C:/Users/Mark/StudioProjects/kaffebotapp/lib/Views/dashboard.dart';
+
+import 'Views/dashboard.dart';
 void main() {
   runApp(MyApp());
 }

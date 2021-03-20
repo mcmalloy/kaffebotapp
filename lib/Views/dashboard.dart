@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:kaffebotapp/Model/battery_status.dart';
 import 'package:kaffebotapp/Services/api_service.dart';
 import 'package:kaffebotapp/Utils/custom_colors.dart';
-import 'file:///C:/Users/Mark/StudioProjects/kaffebotapp/lib/Views/statistic_view.dart';
 import 'package:kaffebotapp/Views/movement_widgets.dart';
 import 'package:web_socket_channel/io.dart';
+import 'statistic_view.dart';
 
 class MyHomePage extends StatefulWidget {
   final AnimationController animationController;
@@ -36,7 +36,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     super.initState();
     //streamController.stream.asBroadcastStream();
     //streamController.stream.asBroadcastStream(onListen: (messages) => print(messages));
-    initStream();
+    //initStream();
     setState(() {
       numberAnimation = Tween<double>(begin: 0, end: 0.5).animate(
           CurvedAnimation(
@@ -48,20 +48,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Future<void> initStream() async {
     //await apiService.socketIO();
     String command = "";
-    streamController.stream.listen((data) {
-      print("Message: "+data);
-      command = data;
-      channel.sink.add(data); // Streams the WASD movement data to the python websocket
-    });
+    //streamController.stream.listen((data) {print("Message: "+data);command = data;});
     channel.stream.listen((event) { // Python requires to send a confirmation, we ignore it
-      channel.sink.add(command);
+      print("Sending stream: $event");
+      channel.sink.add(event);
     });
-
   }
 
   void dispose() {
     print("Closing stream");
     streamController.close();
+    channel.sink.close();
     super.dispose();
   }
 
@@ -102,27 +99,23 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           AnimatedContainer(
+            padding: EdgeInsets.only(left: 0),
               height: double.infinity,
               width: _showDashBoard ? 310 : 70,
               color: CustomColors.discordDashboardGrey,
               duration: Duration(milliseconds: 400),
               child: dashBoardChildren()),
-          Expanded(
-            flex: 4,
-            child: Column(
+            Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 keyboardUI()
               ],
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Padding(
+            Padding(
                 padding:
-                    EdgeInsets.only(left: 32, right: 32, bottom: 32, top: 32),
+                    EdgeInsets.only(right: 32, bottom: 32, top: 32),
                 child: robotStatusWidget()),
-          )
+
         ],
       ),
     );
@@ -187,19 +180,19 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   Widget robotStatusWidget() {
     return FutureBuilder<bool>(
-      future: getData(),
-      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-        if (!snapshot.hasData) {
-          return const SizedBox();
-        } else {
-          widget.animationController.forward();
-          return StatusView(
-            batteryStatus: batteryStatus,
-            animation: numberAnimation,
-            animationController: widget.animationController,
-          );
-        }
-      },
+        future: getData(),
+        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+          if (!snapshot.hasData) {
+            return const SizedBox();
+          } else {
+            widget.animationController.forward();
+            return StatusView(
+              batteryStatus: batteryStatus,
+              animation: numberAnimation,
+              animationController: widget.animationController,
+            );
+          }
+        },
     );
   }
 
@@ -267,6 +260,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (event.runtimeType.toString() == 'RawKeyDownEvent') {
       streamController.sink.done;
       channel.sink.done;
+      //initStream();
       resetMovementBool();
       if (event.logicalKey.keyLabel.toUpperCase() == "W") {
         setState(() {
@@ -279,20 +273,24 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           _isTurningLeft = true;
         });
         streamController.sink.add("Turning Left");
+        channel.sink.add("Turning Left");
       } else if (event.logicalKey.keyLabel.toUpperCase() == "S") {
         setState(() {
           _isReversing = true;
         });
         streamController.sink.add("Reversing");
-
+        channel.sink.add("Reversing");
       } else if (event.logicalKey.keyLabel.toUpperCase() == "D") {
         setState(() {
           _isTurningRight = true;
         });
         streamController.sink.add("Turning Right");
+        channel.sink.add("Turning Right");
       }
     } else if (event.runtimeType.toString() == 'RawKeyUpEvent') {
       streamController.sink.done;
+      channel.sink.done;
+      initStream();
       if (event.logicalKey.keyLabel.toUpperCase() == "W") {
         setState(() {
           _isForward = false;
