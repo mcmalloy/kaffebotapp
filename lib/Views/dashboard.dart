@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -27,16 +29,18 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   bool _isTurningLeft = false;
   bool _isTurningRight = false;
   bool _isReversing = false;
+  bool _isConnectedToRobot = false;
+
   MovementWidgets customWidgets = MovementWidgets();
   StreamController<String> streamController = StreamController();
-  IOWebSocketChannel channel = IOWebSocketChannel.connect("ws://127.0.0.1:8765");
+  String webSocketURL = "127.0.0.1:8765";
+  IOWebSocketChannel channel =
+      IOWebSocketChannel.connect("ws://127.0.0.1:8765");
+  TextEditingController _urlController = TextEditingController();
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    //streamController.stream.asBroadcastStream();
-    //streamController.stream.asBroadcastStream(onListen: (messages) => print(messages));
-    //initStream();
     setState(() {
       numberAnimation = Tween<double>(begin: 0, end: 0.5).animate(
           CurvedAnimation(
@@ -45,13 +49,32 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
   }
 
+  Future<void> attemptStreamConnection() {
+    setState(() {
+      webSocketURL = _urlController.text;
+      channel = IOWebSocketChannel.connect("ws://$webSocketURL");
+    });
+    try{
+      channel.sink.add("TestConnection");
+      channel.sink.done;
+      setState(() {
+        _isConnectedToRobot = true;
+      });
+    } catch (e){
+      print("Websocket error occurred: $e");
+      setState(() {
+        _isConnectedToRobot = false;
+      });
+    }
+  }
+
   Future<void> initStream() async {
-    //await apiService.socketIO();
     String command = "";
-    //streamController.stream.listen((data) {print("Message: "+data);command = data;});
-    channel.stream.listen((event) { // Python requires to send a confirmation, we ignore it
+    channel.stream.listen((event) {
+      // Python requires to send a confirmation, we ignore it
       print("Sending stream: $event");
       channel.sink.add(event);
+
     });
   }
 
@@ -88,40 +111,123 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   Widget dashboardBody() {
     return RawKeyboardListener(
-      focusNode: FocusNode(),
-      onKey: (RawKeyEvent event) {
-        setState(() {
-          keyboardInterpreter(event);
-        });
-      },
-      autofocus: true,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          AnimatedContainer(
-            padding: EdgeInsets.only(left: 0),
-              height: double.infinity,
-              width: _showDashBoard ? 310 : 70,
-              color: CustomColors.discordDashboardGrey,
-              duration: Duration(milliseconds: 400),
-              child: dashBoardChildren()),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+        focusNode: FocusNode(),
+        onKey: (RawKeyEvent event) {
+          setState(() {
+            keyboardInterpreter(event);
+          });
+        },
+        autofocus: true,
+        child: Stack(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                keyboardUI()
+                AnimatedContainer(
+                    padding: EdgeInsets.only(left: 0),
+                    height: double.infinity,
+                    width: _showDashBoard ? 310 : 70,
+                    color: CustomColors.discordDashboardGrey,
+                    duration: Duration(milliseconds: 400),
+                    child: dashBoardIcons()),
+                keyboardUI(),
+                robotStatusWidget(),
               ],
             ),
-            Padding(
-                padding:
-                    EdgeInsets.only(right: 32, bottom: 32, top: 32),
-                child: robotStatusWidget()),
+            connectionStatusWidget(),
+          ],
+        ));
+  }
 
-        ],
-      ),
+  Widget connectionStatusWidget() {
+    return Positioned(
+      top: 32,
+      left: 102,
+      child: Container(
+          padding: EdgeInsets.only(left: 12),
+          width: 400,
+          height: 200,
+          decoration: BoxDecoration(
+            color: CustomColors.discordDashboardGrey,
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24.0),
+                bottomLeft: Radius.circular(24.0),
+                bottomRight: Radius.circular(24.0),
+                topRight: Radius.circular(24.0)),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                  color: CustomColors.discordDashboardGrey.withOpacity(0.2),
+                  offset: Offset(1.1, 1.1),
+                  blurRadius: 10.0),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Connection status to Roomba: $_isConnectedToRobot ",
+                style: GoogleFonts.montserrat(
+                    textStyle: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.normal,
+                        color: CustomColors.discordBlue)),
+              ),
+              Text(
+                "Current IP address: $webSocketURL",
+                style: GoogleFonts.montserrat(
+                    textStyle: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.normal,
+                        color: CustomColors.discordBlue)),
+              ),
+              Row(
+                children: [
+                  Text(
+                    "Change URL: ",
+                    style: GoogleFonts.montserrat(
+                        textStyle: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.normal,
+                            color: CustomColors.discordBlue)),
+                  ),
+                  Container(
+                    height: 10,
+                    width: 100,
+                    child: TextFormField(
+                      controller: _urlController,
+                      validator: (value) {
+                        if (value.isEmpty) {
+                          return 'Enter URL';
+                        }
+                        return null;
+                      },
+                      obscureText: false,
+                    ),
+                  ),
+                  Container(
+                    height: 40,
+                    width: 80,
+                    color: CustomColors.discordBlue,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        attemptStreamConnection();
+                      },
+                      child: Text("Set IP",
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.normal,
+                              color: CustomColors.discordDashboardGrey)),
+                    ),
+                  )
+                ],
+              )
+            ],
+          )),
     );
   }
 
-  Widget dashBoardChildren() {
+  Widget dashBoardIcons() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -179,7 +285,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Widget robotStatusWidget() {
-    return FutureBuilder<bool>(
+    return Padding(
+      padding: EdgeInsets.only(right: 32, bottom: 32, top: 32),
+      child: FutureBuilder<bool>(
         future: getData(),
         builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
           if (!snapshot.hasData) {
@@ -193,6 +301,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             );
           }
         },
+      ),
     );
   }
 
@@ -207,15 +316,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   Widget keyCap(bool isPressed, String keyCapLetter) {
     return Container(
-      height: 50,
-      width: 50,
+      height: 90,
+      width: 90,
       decoration: BoxDecoration(
           color: isPressed
               ? CustomColors.discordBlue.withOpacity(0.7)
               : CustomColors.discordDark,
-          borderRadius: BorderRadius.circular(12)),
+          borderRadius: BorderRadius.circular(24)),
       child: Padding(
-        padding: EdgeInsets.only(top: 14),
+        padding: EdgeInsets.only(top: 24),
         child: Text(
           keyCapLetter,
           textAlign: TextAlign.center,
@@ -228,27 +337,32 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Widget keyboardUI() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Padding(
-          padding: keyCapPadding(),
-          child: keyCap(_isForward, "W"),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Padding(
-              padding: keyCapPadding(),
-              child: keyCap(_isTurningLeft, "A"),
-            ),
-            Padding(padding: keyCapPadding(), child: keyCap(_isReversing, "S")),
-            Padding(
-                padding: keyCapPadding(), child: keyCap(_isTurningRight, "D")),
-          ],
-        )
-      ],
+    return Padding(
+      padding: EdgeInsets.only(bottom: 64),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Padding(
+            padding: keyCapPadding(),
+            child: keyCap(_isForward, "W"),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: keyCapPadding(),
+                child: keyCap(_isTurningLeft, "A"),
+              ),
+              Padding(
+                  padding: keyCapPadding(), child: keyCap(_isReversing, "S")),
+              Padding(
+                  padding: keyCapPadding(),
+                  child: keyCap(_isTurningRight, "D")),
+            ],
+          )
+        ],
+      ),
     );
   }
 
@@ -290,13 +404,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     } else if (event.runtimeType.toString() == 'RawKeyUpEvent') {
       streamController.sink.done;
       channel.sink.done;
-      initStream();
+      //initStream();
       if (event.logicalKey.keyLabel.toUpperCase() == "W") {
         setState(() {
           _isForward = false;
         });
         print("Braking forward");
-       } else if (event.logicalKey.keyLabel.toUpperCase() == "A") {
+      } else if (event.logicalKey.keyLabel.toUpperCase() == "A") {
         setState(() {
           _isTurningLeft = false;
         });

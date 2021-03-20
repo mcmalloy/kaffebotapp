@@ -6,7 +6,7 @@ class MovementWidgets {
   TextStyle highlightMovement() {
     return GoogleFonts.montserrat(
         textStyle: TextStyle(
-            fontSize: 16,
+            fontSize: 32,
             fontWeight: FontWeight.bold,
             color: CustomColors.discordDashboardGrey));
   }
@@ -14,7 +14,7 @@ class MovementWidgets {
   TextStyle defaultHighlight() {
     return GoogleFonts.montserrat(
         textStyle: TextStyle(
-            fontSize: 16,
+            fontSize: 32,
             color: CustomColors.discordBlue));
   }
 
