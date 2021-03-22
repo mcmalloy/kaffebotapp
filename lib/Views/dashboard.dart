@@ -50,6 +50,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Future<void> attemptStreamConnection() {
+
     setState(() {
       webSocketURL = _urlController.text;
       channel = IOWebSocketChannel.connect("ws://$webSocketURL");
