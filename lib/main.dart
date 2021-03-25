@@ -24,8 +24,8 @@ class Main extends StatefulWidget {
 class _MainState extends State<Main> with TickerProviderStateMixin {
   AnimationController animationController;
   Size _windowSize;
-  double windowWidth = 1920;
-  double windowHeight = 1080;
+  double windowWidth = 1280;
+  double windowHeight = 720;
 
   @override
   void initState() {

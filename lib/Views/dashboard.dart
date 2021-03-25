@@ -33,9 +33,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   MovementWidgets customWidgets = MovementWidgets();
   StreamController<String> streamController = StreamController();
-  String webSocketURL = "127.0.0.1:8765";
-  IOWebSocketChannel channel =
-      IOWebSocketChannel.connect("ws://127.0.0.1:8765");
+  String webSocketURL = "127.0.0.1:8765"; //LOCAL
+  //String webSocketURL = "192.168.240.198:8765";
+  IOWebSocketChannel channel = IOWebSocketChannel.connect("ws://192.168.240.198:8765");
   TextEditingController _urlController = TextEditingController();
   @override
   void initState() {
@@ -50,18 +50,21 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Future<void> attemptStreamConnection() {
-
+    String status;
     setState(() {
-      webSocketURL = _urlController.text;
       channel = IOWebSocketChannel.connect("ws://$webSocketURL");
     });
-    try{
-      channel.sink.add("TestConnection");
+    try {
+      channel.sink.add("Test Connection");
+      channel.stream.listen((event) {
+        status = event;
+        print("Status from server: $event");
+      });
       channel.sink.done;
       setState(() {
         _isConnectedToRobot = true;
       });
-    } catch (e){
+    } catch (e) {
       print("Websocket error occurred: $e");
       setState(() {
         _isConnectedToRobot = false;
@@ -75,7 +78,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       // Python requires to send a confirmation, we ignore it
       print("Sending stream: $event");
       channel.sink.add(event);
-
     });
   }
 
@@ -182,47 +184,29 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                         fontWeight: FontWeight.normal,
                         color: CustomColors.discordBlue)),
               ),
-              Row(
-                children: [
-                  Text(
-                    "Change URL: ",
-                    style: GoogleFonts.montserrat(
-                        textStyle: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.normal,
-                            color: CustomColors.discordBlue)),
-                  ),
-                  Container(
-                    height: 10,
-                    width: 100,
-                    child: TextFormField(
-                      controller: _urlController,
-                      validator: (value) {
-                        if (value.isEmpty) {
-                          return 'Enter URL';
-                        }
-                        return null;
-                      },
-                      obscureText: false,
-                    ),
-                  ),
-                  Container(
-                    height: 40,
-                    width: 80,
+              InkWell(
+                onTap: (){
+                  attemptStreamConnection();
+                },
+                child: Container(
+                  height: 50,
+                  width: 140,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
                     color: CustomColors.discordBlue,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        attemptStreamConnection();
-                      },
-                      child: Text("Set IP",
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.normal,
-                              color: CustomColors.discordDashboardGrey)),
-                    ),
-                  )
-                ],
-              )
+                  ),
+                  child: Center(
+                    child: Text("Test Connection",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.montserrat(
+                            textStyle: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal,
+                                color: CustomColors.discordBackgroundGrey))),
+                  ),
+                ),
+              ),
+
             ],
           )),
     );
@@ -240,7 +224,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             IconButton(
                 icon: AnimatedSwitcher(
                   duration: Duration(milliseconds: 800),
-                  child: _showDashBoard
+                  child: _isConnectedToRobot
                       ? Icon(Icons.wifi, color: Colors.green.withOpacity(0.7))
                       : Icon(
                           Icons.wifi_off_outlined,
@@ -249,7 +233,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 ),
                 iconSize: 40,
                 onPressed: () async {
-                  fetchBatteryData();
+                  //fetchBatteryData();
+                  bool responseStatus = await apiService.initializePythonClient(webSocketURL);
+                  setState(() {
+                    _isConnectedToRobot = responseStatus;
+                  });
                 }),
             IconButton(
                 padding: EdgeInsets.only(top: 30, bottom: 30),
