@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:kaffebotapp/Model/battery_status.dart';
 import 'package:kaffebotapp/Services/api_service.dart';
@@ -37,6 +35,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   //String webSocketURL = "192.168.240.198:8765";
   IOWebSocketChannel channel = IOWebSocketChannel.connect("ws://192.168.240.198:8765");
   TextEditingController _urlController = TextEditingController();
+
+  String startLocation = "Charging Point";
+  String endLocation = "Cafe";
+  FocusNode _focus = new FocusNode();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -57,8 +60,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     try {
       channel.sink.add("Test Connection");
       channel.stream.listen((event) {
-        status = event;
         print("Status from server: $event");
+        status = event;
       });
       channel.sink.done;
       setState(() {
@@ -133,11 +136,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     color: CustomColors.discordDashboardGrey,
                     duration: Duration(milliseconds: 400),
                     child: dashBoardIcons()),
-                keyboardUI(),
                 robotStatusWidget(),
               ],
             ),
             connectionStatusWidget(),
+            drivingStatusWidget(),
+            Positioned(
+              left: 560,
+              bottom: 32,
+              child: keyboardUI(),)
           ],
         ));
   }
@@ -206,6 +213,101 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   ),
                 ),
               ),
+
+            ],
+          )),
+    );
+  }
+
+  Widget drivingStatusWidget(){
+    return Positioned(
+      bottom: 32,
+      left: 102,
+      child: Container(
+          padding: EdgeInsets.only(left: 12),
+          width: 400,
+          height: 200,
+          decoration: BoxDecoration(
+            color: CustomColors.discordDashboardGrey,
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24.0),
+                bottomLeft: Radius.circular(24.0),
+                bottomRight: Radius.circular(24.0),
+                topRight: Radius.circular(24.0)),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                  color: CustomColors.discordDashboardGrey.withOpacity(0.2),
+                  offset: Offset(1.1, 1.1),
+                  blurRadius: 10.0),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Movement status: idle",
+                style: GoogleFonts.montserrat(
+                    textStyle: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.normal,
+                        color: CustomColors.discordBlue)),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 0),
+                    child: InkWell(
+                      onTap: (){
+                        attemptStreamConnection();
+                      },
+                      child: Container(
+                        height: 50,
+                        width: 80,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: CustomColors.discordBlue,
+                        ),
+                        child: Center(
+                          child: Text("Drive home",
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.montserrat(
+                                  textStyle: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.normal,
+                                      color: CustomColors.discordBackgroundGrey))),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: InkWell(
+                      onTap: (){
+                        attemptStreamConnection();
+                      },
+                      child: Container(
+                        height: 50,
+                        width: 80,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: CustomColors.discordBlue,
+                        ),
+                        child: Center(
+                          child: Text("Drive Cafe",
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.montserrat(
+                                  textStyle: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.normal,
+                                      color: CustomColors.discordBackgroundGrey))),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              )
 
             ],
           )),
@@ -327,7 +429,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   Widget keyboardUI() {
     return Padding(
-      padding: EdgeInsets.only(bottom: 64),
+      padding: EdgeInsets.only(bottom: 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.end,

@@ -57,7 +57,7 @@ class StatusView extends StatelessWidget {
           ),
           child: batteryPercentage()
         ),
-        SizedBox(height: 50,),
+        SizedBox(height: 140,),
         Container(
           width: 300,
           height: 200,
