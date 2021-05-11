@@ -10,17 +10,30 @@ class ApiService {
   String baseURL = "http://api.weatherapi.com/v1";
   String key = "d42f68f43dc64f1e90d175122210803LIVE";
 
+  double removeDecimals(double number){
+    String s = number.toString();
+    String ss = s.substring(0,4);
+
+    double parsedNumber = double.parse(ss);
+    return parsedNumber;
+  }
+
   Future<BatteryStatus> getBatteryPercent() async {
-    var url = Uri.http('http://127.0.0.1:5000', '/battery', {'q': '{http}'});
-    String getRequestURL = "http://127.0.0.1:5000/battery";
+    var url = Uri.http('192.168.0.86:5000', '/battery', {'q': '{http}'});
+    String getRequestURL = "http://192.168.0.86:5000/battery";
     try {
       print("searching url: $getRequestURL");
       final response = await http.get(url);
-      print(response.body);
+      print("status: ${response.statusCode}");
+      print("http response: ${response.body}");
       //Map<String, dynamic> map = jsonDecode(response.body);
       Map<String, dynamic> map = jsonDecode(response.body);
       if (response.statusCode == 200) {
         BatteryStatus status = BatteryStatus.fromJson(map);
+        status.batteryVoltage = removeDecimals(status.batteryVoltage);
+        status.batteryCurrent = removeDecimals(status.batteryCurrent);
+        status.batteryPercent = (status.batteryCharge/status.batteryCapacity)*100;
+        print("BatteryPercent: ${status.batteryPercent}");
         return status;
       }
       return null;

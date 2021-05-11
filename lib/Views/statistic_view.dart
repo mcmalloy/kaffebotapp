@@ -28,60 +28,61 @@ class StatusView extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 300,
-          height: 200,
-          decoration: BoxDecoration(
-            color: CustomColors.discordDashboardGrey,
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(8.0),
-                bottomLeft: Radius.circular(8.0),
-                bottomRight: Radius.circular(8.0),
-                topRight: Radius.circular(68.0)),
-            boxShadow: <BoxShadow>[
-              BoxShadow(
-                  color: CustomColors.discordDashboardGrey.withOpacity(0.2),
-                  offset: Offset(1.1, 1.1),
-                  blurRadius: 10.0),
-            ],
-          ),
-          child: batteryPercentage()
+            width: 300,
+            height: 200,
+            decoration: BoxDecoration(
+              color: CustomColors.discordDashboardGrey,
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8.0),
+                  bottomLeft: Radius.circular(8.0),
+                  bottomRight: Radius.circular(8.0),
+                  topRight: Radius.circular(68.0)),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                    color: CustomColors.discordDashboardGrey.withOpacity(0.2),
+                    offset: Offset(1.1, 1.1),
+                    blurRadius: 10.0),
+              ],
+            ),
+            child: batteryPercentage()),
+        SizedBox(
+          height: 140,
         ),
-        SizedBox(height: 140,),
         Container(
-          width: 300,
-          height: 200,
-          decoration: BoxDecoration(
-            color: CustomColors.discordDashboardGrey,
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(8.0),
-                bottomLeft: Radius.circular(8.0),
-                bottomRight: Radius.circular(68.0),
-                topRight: Radius.circular(8.0)),
-            boxShadow: <BoxShadow>[
-              BoxShadow(
-                  color: CustomColors.discordDashboardGrey.withOpacity(0.2),
-                  offset: Offset(1.1, 1.1),
-                  blurRadius: 10.0),
-            ],
-          ),
-          child: voltageAndCurrent()
-        )
+            width: 300,
+            height: 200,
+            decoration: BoxDecoration(
+              color: CustomColors.discordDashboardGrey,
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8.0),
+                  bottomLeft: Radius.circular(8.0),
+                  bottomRight: Radius.circular(68.0),
+                  topRight: Radius.circular(8.0)),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                    color: CustomColors.discordDashboardGrey.withOpacity(0.2),
+                    offset: Offset(1.1, 1.1),
+                    blurRadius: 10.0),
+              ],
+            ),
+            child: voltageAndCurrent())
       ],
     );
   }
 
   Widget batteryPercentage() {
     return Padding(
-        padding: const EdgeInsets.only(right: 16, left: 16, top: 32, bottom: 32),
+        padding:
+            const EdgeInsets.only(right: 16, left: 16, top: 32, bottom: 32),
         child: Row(
           children: [
             AutoSizeText(
-                "Battery Level ",
-                style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 22,
-                    letterSpacing: -0.2,
-                    color: CustomColors.discordBlue),
+              "Battery Level ",
+              style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 22,
+                  letterSpacing: -0.2,
+                  color: CustomColors.discordBlue),
             ),
             Center(child: batteryPercentCircle()),
           ],
@@ -193,7 +194,7 @@ class StatusView extends StatelessWidget {
               children: <Widget>[
                 AutoSizeText(
                   //'${(batteryPercent * animationController.value).toInt()}%',
-                  '${(batteryStatus.batteryPercentage * animationController.value).toInt()}%',
+                  '${(batteryStatus.batteryPercent * animationController.value).toInt()}%',
                   style: TextStyle(
                     fontWeight: FontWeight.normal,
                     fontSize: 26,
@@ -214,10 +215,10 @@ class StatusView extends StatelessWidget {
                 HexColor("#8A98E8"),
                 CustomColors.discordBlue,
               ],
-              angle: ((animationController.value *
-                          batteryStatus.batteryPercentage) /
-                      100) *
-                  360,
+              angle:
+                  ((animationController.value * batteryStatus.batteryPercent) /
+                          100) *
+                      360,
             ),
             child: SizedBox(
               width: 108,
@@ -237,50 +238,50 @@ class StatusView extends StatelessWidget {
       BoxDecoration horizontalBarGradient,
       CrossAxisAlignment calignment) {
     return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: calignment,
-        children: <Widget>[
-          AutoSizeText(
-            type,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 16,
-                letterSpacing: -0.2,
-                color: textColor),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Container(
-              height: 12,
-              width: 100,
-              decoration: horizontalBarGradient,
-              child: Row(
-                children: <Widget>[
-                  Container(
-                    width: (50 - animation.value),
-                    height: 12,
-                    decoration: BoxDecoration(
-                      gradient: thickGradient,
-                      borderRadius: BorderRadius.all(Radius.circular(4.0)),
-                    ),
-                  )
-                ],
-              ),
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: calignment,
+      children: <Widget>[
+        AutoSizeText(
+          type,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 16,
+              letterSpacing: -0.2,
+              color: textColor),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Container(
+            height: 12,
+            width: 100,
+            decoration: horizontalBarGradient,
+            child: Row(
+              children: <Widget>[
+                Container(
+                  width: (85 - animation.value),
+                  height: 12,
+                  decoration: BoxDecoration(
+                    gradient: thickGradient,
+                    borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                  ),
+                )
+              ],
             ),
           ),
-          AutoSizeText(
-            type.contains("Voltage")
-                ? "${batteryStatus.batteryVoltage}V"
-                : "${batteryStatus.batteryCurrent}A",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 16,
-                letterSpacing: -0.2,
-                color: textColor),
-          )
-        ],
+        ),
+        AutoSizeText(
+          type.contains("Voltage")
+              ? "${batteryStatus.batteryVoltage}V"
+              : "${-batteryStatus.batteryCurrent*1000}mA",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 16,
+              letterSpacing: -0.2,
+              color: textColor),
+        )
+      ],
     );
   }
 }
