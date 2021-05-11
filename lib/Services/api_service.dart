@@ -47,6 +47,7 @@ class ApiService {
     var jsonBody;
     int code = 404;
     channel.sink.add("Requesting connection");
+    channel.sink.add("1.0");
     channel.sink.close();
     await channel.stream.first.then((response) {
       print("Response: $response");

@@ -20,18 +20,7 @@ class StatusView extends StatelessWidget {
     return AnimatedBuilder(
         animation: animationController,
         builder: (BuildContext context, Widget child) {
-          return FadeTransition(
-            opacity: Tween<double>(begin: 1.0, end: 1.0).animate(
-                CurvedAnimation(
-                    parent: animationController,
-                    curve: Interval((1 / 2) * 1, 1.0,
-                        curve: Curves.fastOutSlowIn))),
-            // Måske skal vi fjerne Transform? Det som den gør er, at bevæge dens child i x,y,z (i dette tilfælde kun opad). Det er måske en unødig bevægelse ift. vores flow
-            child: new Transform(
-                transform: new Matrix4.translationValues(
-                    0.0, 30 * (1.0 - animation.value), 0.0),
-                child: batteryStatusContainers()),
-          );
+          return batteryStatusContainers();
         });
   }
 

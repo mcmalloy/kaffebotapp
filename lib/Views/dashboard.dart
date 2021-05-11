@@ -31,18 +31,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   MovementWidgets customWidgets = MovementWidgets();
   StreamController<String> streamController = StreamController();
-  String webSocketURL = "127.0.0.1:8765"; //LOCAL
-  //String webSocketURL = "192.168.240.198:8765";
-  IOWebSocketChannel channel = IOWebSocketChannel.connect("ws://192.168.240.198:8765");
+  //String webSocketURL = "127.0.0.1:8765"; //LOCAL
+  String movementDuration = "1.9";
+  String webSocketURL = "192.168.0.86:8765";
+  IOWebSocketChannel channel = IOWebSocketChannel.connect("ws://192.168.0.86:8765");
   TextEditingController _urlController = TextEditingController();
 
   String startLocation = "Charging Point";
   String endLocation = "Cafe";
-  FocusNode _focus = new FocusNode();
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     setState(() {
       numberAnimation = Tween<double>(begin: 0, end: 0.5).animate(
@@ -52,6 +51,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
   }
 
+  void refreshAnimation(double newValue){ 
+    double _currentAnimationValue = widget.animationController.value;
+    print("current animation value: $_currentAnimationValue");
+    //widget.animationController = widget.animationController.reverse();
+    //widget.animationController.reset();
+    setState(() {
+      //batteryStatus = new BatteryStatus(70, 4.94, 1.21);
+    });
+    widget.animationController.animateBack(0.70,duration: Duration(seconds: 2), curve: Curves.easeInOutCubic);
+  }
+
   Future<void> attemptStreamConnection() {
     String status;
     setState(() {
@@ -59,6 +69,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
     try {
       channel.sink.add("Test Connection");
+      channel.sink.add("21"); // 2.2 seconds about 1 meter or about 0.455m/s. Distance to M2.80 = 8.6 meters
       channel.stream.listen((event) {
         print("Status from server: $event");
         status = event;
@@ -98,7 +109,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       print("setting batteryPercent to: ${response.batteryPercentage}");
       batteryStatus = response;
     });
+    refreshAnimation(response.batteryPercentage);
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -377,7 +391,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   Widget robotStatusWidget() {
     return Padding(
-      padding: EdgeInsets.only(right: 32, bottom: 32, top: 32),
+      padding: EdgeInsets.only(right: 32, top: 32),
       child: FutureBuilder<bool>(
         future: getData(),
         builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
@@ -473,6 +487,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         });
         streamController.sink.add("Moving Forward");
         channel.sink.add("Moving Forward");
+        channel.sink.add(movementDuration);
+
       } else if (event.logicalKey.keyLabel.toUpperCase() == "A") {
         setState(() {
           _isTurningLeft = true;
@@ -485,12 +501,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         });
         streamController.sink.add("Reversing");
         channel.sink.add("Reversing");
+        channel.sink.add(movementDuration);
       } else if (event.logicalKey.keyLabel.toUpperCase() == "D") {
         setState(() {
           _isTurningRight = true;
         });
         streamController.sink.add("Turning Right");
         channel.sink.add("Turning Right");
+      } else if (event.logicalKey.keyLabel.toUpperCase() == "R"){
+        fetchBatteryData();
       }
     } else if (event.runtimeType.toString() == 'RawKeyUpEvent') {
       streamController.sink.done;
