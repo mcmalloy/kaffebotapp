@@ -1,18 +1,18 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:kaffebotapp/Model/battery_status.dart';
-import 'package:socket_io_client/socket_io_client.dart';
+import 'package:kaffebotapp/Model/odometry.dart';
 import 'package:web_socket_channel/io.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:web_socket_channel/status.dart' as status;
+import 'dart:io';
 
 class ApiService {
   String baseURL = "http://api.weatherapi.com/v1";
   String key = "d42f68f43dc64f1e90d175122210803LIVE";
 
-  double removeDecimals(double number){
+  double removeDecimals(double number) {
     String s = number.toString();
-    String ss = s.substring(0,4);
+    String ss = s.substring(0, 4);
 
     double parsedNumber = double.parse(ss);
     return parsedNumber;
@@ -20,9 +20,7 @@ class ApiService {
 
   Future<BatteryStatus> getBatteryPercent() async {
     var url = Uri.http('192.168.0.86:5000', '/battery', {'q': '{http}'});
-    String getRequestURL = "http://192.168.0.86:5000/battery";
     try {
-      print("searching url: $getRequestURL");
       final response = await http.get(url);
       print("status: ${response.statusCode}");
       print("http response: ${response.body}");
@@ -32,7 +30,8 @@ class ApiService {
         BatteryStatus status = BatteryStatus.fromJson(map);
         status.batteryVoltage = removeDecimals(status.batteryVoltage);
         status.batteryCurrent = removeDecimals(status.batteryCurrent);
-        status.batteryPercent = (status.batteryCharge/status.batteryCapacity)*100;
+        status.batteryPercent =
+            (status.batteryCharge / status.batteryCapacity) * 100;
         print("BatteryPercent: ${status.batteryPercent}");
         return status;
       }
@@ -74,5 +73,57 @@ class ApiService {
     }
     return false;
     //channel.stream.listen((response) {print("Response: $response ");});
+  }
+
+  Future<BatteryStatus> fetchBatteryData() async {
+    String ipAddress = InternetAddress.anyIPv4.rawAddress.toString();
+    print("OUR IP ADDRESS: $ipAddress");
+    var url = Uri.parse('http://127.0.0.1:5000/battery');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      Map<String, dynamic> map = jsonDecode(response.body);
+      print("battery body: ${response.body}");
+      BatteryStatus status = BatteryStatus.fromJson(map);
+      status.batteryPercent =
+          status.batteryCharge / status.batteryCapacity * 100;
+      return status;
+    } else {
+      return null;
+    }
+  }
+
+  Future<Odometry> postMovement(String command) async {
+    var url = Uri.parse('http://127.0.0.1:5000/move?command=$command');
+    try {
+      final response = await http.post(url);
+      //Map<String, dynamic> map = jsonDecode(response.body);
+      Map<String, dynamic> map = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        print("odom response: ${response.body}");
+        Odometry currentVelocity = Odometry.fromJson(map);
+        return currentVelocity;
+      }
+      return null;
+    } catch (e) {
+      print("Exception caught: $e");
+      return null;
+    }
+  }
+
+  Future<double> fetchMovement() async {
+    var url = Uri.parse('http://127.0.0.1:5000/simulatemovement');
+    try {
+      final response = await http.get(url);
+      Map<String, dynamic> map = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        print("Success");
+        Odometry currentVelocity = Odometry.fromJson(map);
+        return currentVelocity.linearVelocity;
+      }
+      return null;
+    } catch (e) {
+      print("Exception caught: $e");
+      return null;
+    }
   }
 }
